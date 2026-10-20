@@ -1,0 +1,35 @@
+{
+  "name": "site",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "test": "tsx --test tests/*.test.ts",
+    "test:e2e": "node tests/browser.mjs",
+    "setup:local": "node scripts/prepare-local.mjs",
+    "bot": "tsx bot/run.ts",
+    "bot:check": "tsx bot/run.ts --check",
+    "supabase:check": "node scripts/check-supabase.mjs"
+  },
+  "dependencies": {
+    "next": "16.4.2",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.1",
+    "@types/node": "^24.19.2",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.4.2",
+    "tsx": "^4.23.15",
+    "typescript": "^5"
+  },
+  "engines": {
+    "node": "24.x"
+  }
+}

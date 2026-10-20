@@ -1,0 +1,4 @@
+import type { Metadata } from "next";
+import "./globals.css";
+export const metadata: Metadata = { title: "Подбор витаминов и БАДов под ваши цели", description: "Пройдите короткий тест о питании и образе жизни. Получите персональный ориентир по витаминам и БАДам Nature’s Sunshine после регистрации.", ...(process.env.SITE_URL?{metadataBase:new URL(process.env.SITE_URL),alternates:{canonical:process.env.SITE_URL}}:{}), robots: {index:true,follow:true}, openGraph:{title:"Начните с себя. Подберите свой ритм заботы",description:"Короткий тест и персональный ориентир по питанию и добавкам",locale:"ru_RU",type:"website",...(process.env.SITE_URL?{images:[{url:"/opengraph.png",width:1200,height:630,alt:"Свой ритм — подбор витаминов"}]}:{})}};
+export default function RootLayout({children}:Readonly<{children:React.ReactNode}>){return <html lang="ru"><body>{children}</body></html>}
