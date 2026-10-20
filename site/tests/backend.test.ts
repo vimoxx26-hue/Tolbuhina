@@ -113,3 +113,21 @@ test('SQLite durably stores only contacts with private permissions before unlock
    rmSync(directory,{recursive:true,force:true});
  }
 });
+
+
+test('registration configuration logs identify missing settings without secrets or submitted contacts', async () => {
+ const saved={...process.env};const original=console.error;const logs:unknown[][]=[];
+ console.error=(...args:unknown[])=>{logs.push(args)};
+ try {
+  Object.assign(process.env,{LEAD_STORAGE:'supabase',SUPABASE_URL:'https://database.example',SUPABASE_SECRET_KEY:'private-test-secret-value',SITE_OWNER_NAME:'Test owner'});
+  delete process.env.REGISTRATION_SECRET;delete process.env.SITE_OWNER_CONTACT;
+  const response=await register(request('/api/lead',validLead,{'x-forwarded-for':'192.0.2.44'}));
+  assert.equal(response.status,503);
+  const log=JSON.stringify(logs);assert.match(log,/SITE_OWNER_CONTACT missing/);
+  for(const value of ['private-test-secret-value',validLead.name,validLead.phone,validLead.telegram])assert.equal(log.includes(value),false);
+ } finally {
+  console.error=original;
+  for(const key of Object.keys(process.env))if(!(key in saved))delete process.env[key];
+  Object.assign(process.env,saved);
+ }
+});
