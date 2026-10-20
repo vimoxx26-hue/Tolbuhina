@@ -44,7 +44,7 @@ function privateDatabasePath() {
   chmodSync(dbPath, 0o600);
   return dbPath;
 }
-export function saveSQLiteLead(lead: Lead) {
+export function saveSQLiteLead(lead: Lead, id: string = randomUUID()) {
   const path = privateDatabasePath();
   const db = new DatabaseSync(path);
   try {
@@ -61,14 +61,14 @@ export function saveSQLiteLead(lead: Lead) {
         utm TEXT NOT NULL
       );`);
     db.prepare('INSERT INTO leads (id,created_at,name,phone,telegram,consent,consent_version,page,utm) VALUES (?,?,?,?,?,?,?,?,?)')
-      .run(randomUUID(), new Date().toISOString(), lead.name, lead.phone, lead.telegram, 1, lead.consent_version, lead.page, JSON.stringify(lead.utm));
+      .run(id, new Date().toISOString(), lead.name, lead.phone, lead.telegram, 1, lead.consent_version, lead.page, JSON.stringify(lead.utm));
   } finally {
     db.close();
     for (const suffix of ['', '-wal', '-shm']) if (existsSync(/* turbopackIgnore: true */ `${path}${suffix}`)) chmodSync(`${path}${suffix}`, 0o600);
   }
 }
-export async function persistLead(lead: Lead) {
-  if (storageMode() === 'sqlite') { saveSQLiteLead(lead); return; }
+export async function persistLead(lead: Lead, id?: string) {
+  if (storageMode() === 'sqlite') { saveSQLiteLead(lead, id); return; }
   if (storageMode() !== 'supabase') throw new Error('Unsupported lead storage');
   const url = process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_SECRET_KEY;
@@ -77,7 +77,7 @@ export async function persistLead(lead: Lead) {
   if (endpoint.protocol !== 'https:' && !(process.env.NODE_ENV !== 'production' && ['localhost', '127.0.0.1'].includes(endpoint.hostname))) throw new Error('Unsafe storage endpoint');
   const result = await fetch(endpoint, {
     method: 'POST', headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
-    body: JSON.stringify(lead), signal: AbortSignal.timeout(12000), cache: 'no-store',
+    body: JSON.stringify(id ? {...lead, id} : lead), signal: AbortSignal.timeout(12000), cache: 'no-store',
   });
   if (!result.ok) throw new Error('Storage unavailable');
 }

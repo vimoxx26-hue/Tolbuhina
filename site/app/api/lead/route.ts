@@ -1,3 +1,5 @@
+import {randomUUID} from 'node:crypto';
+import {issueTelegramLink} from '@/lib/telegram-link';
 import { NextRequest, NextResponse } from 'next/server';
 import { ACCESS_COOKIE, ACCESS_SECONDS, issueAccess } from '@/lib/access';
 import { validateLead } from '@/lib/validation';
@@ -28,7 +30,8 @@ export async function POST(request: NextRequest) {
     console.error('REGISTRATION_CONFIG_MISSING', issues);
     return apiError('Регистрация пока недоступна. Подключаем приём заявок — попробуйте позже', 503);
   }
-  try { await persistLead(lead); }
+  const leadId = randomUUID();
+  try { await persistLead(lead, leadId); }
   catch { return apiError('Не удалось сохранить регистрацию. Попробуйте позже', 503); }
   const token = process.env.TELEGRAM_BOT_TOKEN;
   const chat = process.env.TELEGRAM_CHAT_ID;
@@ -41,7 +44,7 @@ export async function POST(request: NextRequest) {
       if (!notification.ok) console.warn('Lead stored; notification delivery failed');
     } catch { console.warn('Lead stored; notification unavailable'); }
   }
-  const response = NextResponse.json({ ok: true }, { headers: { 'Cache-Control': 'no-store' } });
+  const response = NextResponse.json({ ok: true, telegramUrl: issueTelegramLink(leadId,key) }, { headers: { 'Cache-Control': 'no-store' } });
   response.cookies.set(ACCESS_COOKIE, issueAccess(key), { httpOnly: true, secure: request.nextUrl.protocol === 'https:', sameSite: 'strict', path: '/', maxAge: ACCESS_SECONDS });
   return response;
 }

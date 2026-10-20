@@ -1,3 +1,4 @@
+import {handleTelegramStart} from '../lib/telegram-start';
 import {loadEnvFile} from 'node:process';
 import {existsSync,readFileSync,writeFileSync,renameSync,mkdirSync,chmodSync} from 'node:fs';
 import {dirname,resolve} from 'node:path';
@@ -34,6 +35,7 @@ async function main(){
     if(update.callback_query){try{await api('answerCallbackQuery',{callback_query_id:update.callback_query.id})}catch{/* Expired callback; still process valid state. */}}
     const time=Date.now();for(const [id,v] of counts)if(v.until<=time)counts.delete(id);
     if(chat){const current=counts.get(chat.id)||{count:0,until:time+60000};current.count++;if(counts.size<10000||counts.has(chat.id))counts.set(chat.id,current);if(current.count>35||counts.size>=10000){saveOffset(update.update_id+1);continue}}
+    if(await handleTelegramStart(update,api)){saveOffset(update.update_id+1);continue;}
     if(chat?.type==='private'&&update.message?.text==='/id'){await api('sendMessage',{chat_id:chat.id,text:`Ваш chat_id: ${chat.id}\nВладелец может указать его в TELEGRAM_CHAT_ID, чтобы получать регистрации.`});}
     else for(const action of await flow.handle(update)){if(action.method!=='answerCallbackQuery')await api(action.method,action.payload);}
     saveOffset(update.update_id+1);

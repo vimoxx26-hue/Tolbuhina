@@ -7,6 +7,9 @@ create table if not exists public.leads (
  consent boolean not null check (consent = true),
  consent_version text not null default '2026-10-20',
  page text check (char_length(page) <= 2048),
+ telegram_user_id bigint,
+ telegram_chat_id bigint,
+ telegram_started_at timestamptz,
  utm jsonb not null default '{}'::jsonb
 );
 alter table public.leads enable row level security;
